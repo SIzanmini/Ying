@@ -1,1 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Birthday Ying! 🎂</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #fed6e3 0%, #a8c1ef 100%);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            user-select: none;
+        }
+        #bg-music { display: none; }
+        
+        .screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.5s ease-in-out;
+            padding: 20px;
+        }
+        .hidden { display: none !important; opacity: 0; }
+
+        .card {
+            background: rgba(255, 255, 255, 0.85);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            max-width: 500px;
+            backdrop-filter: blur(10px);
+            animation: float 3s ease-in-out infinite;
+        }
+        h1 { color: #ff4a75; margin-bottom: 20px; font-size: 2.5rem; }
+        p { color: #4a4a4a; font-size: 1.2rem; margin-bottom: 30px; line-height: 1.6; }
+        button {
+            background: #ff4a75;
+            color: white;
+            border: none;
+            padding: 15px 35px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255,74,117,0.4);
+            transition: transform 0.2s, background 0.2s;
+        }
+        button:hover { transform: scale(1.05); background: #ff2a5f; }
+        .gif-container img { width: 150px; margin-bottom: 20px; border-radius: 10px; }
+
+        #game-screen { position: relative; width: 100%; height: 100%; background: #0f172a; overflow: hidden; }
+        #game-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        .game-ui {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 1.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            pointer-events: none;
+            z-index: 10;
+        }
+        .instruction { font-size: 0.9rem; color: #cbd5e1; margin-top: 5px; }
+
+        .reason-toast {
+            position: absolute;
+            bottom: 10%;
+            left: 50%;
+            transform: translateX(-50%) scale(0.9);
+            background: rgba(255, 255, 255, 0.95);
+            color: #ff4a75;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 100;
+            max-width: 80%;
+        }
+        .reason-toast.show { opacity: 1; transform: translateX(-50%) scale(1); }
+
+        #letter-screen { overflow-y: auto; display: flex; align-items: center; justify-content: center; }
+        .letter-box {
+            background: #fffdf6;
+            max-width: 600px;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            border-left: 8px solid #ff4a75;
+            text-align: left;
+            margin: 40px 20px;
+        }
+        .letter-box h2 { color: #ff4a75; margin-bottom: 20px; font-family: 'Georgia', serif; }
+        .letter-content {
+            white-space: pre-line;
+            color: #334155;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 30px;
+            font-family: 'Georgia', serif;
+        }
+        .letter-footer { text-align: right; font-weight: bold; color: #ff4a75; font-size: 1.2rem; }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="bg-music" loop>
+        <source src="https://soundhelix.com" type="audio/mp3">
+    </audio>
+
+    <div id="welcome-screen" class="screen">
+        <div class="card">
+            <div class="gif-container">
+                <img src="https://giphy.com" alt="Cute Birthday Cat">
+            </div>
+            <h1>A Surprise for Ying! 🎁</h1>
+            <p>Someone who loves you made this — just for you. Get ready for a little fun activity!</p>
+            <button onclick="startExperience()">Unwrap it ✨</button>
+        </div>
+    </div>
+
+    <div id="game-screen" class="screen hidden">
+        <div class="game-ui">
+            <div>Balloons Popped: <span id="score">0</span> / 5</div>
+            <div class="instruction">Click/Tap & Drag back on the bow to shoot arrows at the balloons!</div>
+        </div>
+        <canvas id="game-canvas"></canvas>
+        <div id="toast" class="reason-toast"></div>
+    </div>
+
+    <div id="letter-screen" class="screen hidden">
+        <div class="letter-box">
+            <h2>Dear Ying, 💌</h2>
+            <div class="letter-content" id="letter-text"></div>
+            <div class="letter-footer">From, Sizan ❤️</div>
+        </div>
+    </div>
+
+    <script>
+        const reasons = [
+            "Your laugh is my favourite sound 💛",
+            "You make ordinary days feel special ✨",
+            "You were there in my worst time 🤝",
+            "I hope u get so so much love in this world 🌎",
+            "Don't be sad in this bc u have me and others too 🥰"
+        ];
+
+        const letterMessage = `Ying,\nU are special to me bc u made me feel special those moments laugh spammed reels and talks was amazing. I really enjoyed and still enjoying talking to you. I wanna give you so many gifts and i have plans,but it's not possible because of long distance. If i ever made you feel hurt i am sorry from my heart. Well u are still kiddo to me in month hahaha bleh jk well so so many happy birthday to youu. Be happy and if u ever feel alone or anything just call me ^_^\n\nSizan`;
+
+        let audio = document.getElementById('bg-music');
+        let currentScore = 0;
+
+        function startExperience() {
+            document.getElementById('welcome-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            audio.play().catch(e => console.log("Audio play blocked"));
+            initGame();
+        }
+
+        function showToast(text) {
+            const toast = document.getElementById('toast');
+            toast.innerText = text;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 4000);
+        }
+
+        function endGame() {
+            setTimeout(() => {
+                document.getElementById('game-screen').classList.add('hidden');
+                document.getElementById('letter-screen').classList.remove('hidden');
+                document.getElementById('letter-text').innerText = letterMessage;
+                for(let i=0; i<50; i++) { createConfetti(); }
+            }, 2000);
+        }
+
+        function createConfetti() {
+            const confetti = document.createElement('div');
+            confetti.innerText = '🎈';
+            confetti.style.position = 'fixed';
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.top = '-20px';
+            confetti.style.fontSize = Math.random() * 20 + 20 + 'px';
+            confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+            confetti.style.zIndex = '999';
+            confetti.style.pointerEvents = 'none';
+            confetti.style.transition = 'all 3s ease-out';
+            document.body.appendChild(confetti);
+
+            setTimeout(() => {
+                confetti.style.top = '105vh';
+                confetti.style.left = (parseFloat(confetti.style.left) + (Math.random() * 20 - 10)) + 'vw';
+            }, 50);
+            setTimeout(() => confetti.remove(), 3000);
+        }
+
+        function initGame() {
+            const canvas = document.getElementById('game-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            let bow = { x: 100, y: canvas.height / 2, radius: 40 };
+            let arrow = { x: 100, y: canvas.height / 2, vx: 0, vy: 0, launched: false, angle: 0 };
+            let balloons = [];
+            let isDragging = false;
+            let mouse = { x: 0, y: 0 };
+
+            const colors = ['#ff4a75', '#38bdf8', '#fbbf24', '#34d399', '#a78bfa'];
+            for(let i = 0; i < 5; i++) {
+                balloons.push({
+                    x: canvas.width - 150 - (i * 40),
+                    y: canvas.height + (i * 150) + 100,
+                    radius: 30,
+                    color: colors[i],
+                    speed: 1.5 + Math.random() * 1.5,
+                    reason: reasons[i],
+                    popped: false
+                });
+            }
+
+            function getMousePos(e) {
+                let clientX = e.clientX || (e.touches && e.touches[0].clientX);
+                let clientY = e.clientY || (e.touches && e.touches[0].clientY);
 
