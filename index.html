@@ -246,6 +246,64 @@
             function getMousePos(e) {
                 let clientX = e.clientX || (e.touches && e.touches[0].clientX);
                 let clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+ctx.strokeStyle = '#94a3b8';
+ctx.lineWidth = 1.5;
+ctx.stroke();
+ctx.restore();
+if(arrow.launched) {
+arrow.x += arrow.vx;
+arrow.y += arrow.vy;
+arrow.angle = Math.atan2(arrow.vy, arrow.vx);
+balloons.forEach(b => {
+if(!b.popped) {
+let dist = Math.sqrt(Math.pow(arrow.x - b.x, 2) + Math.pow(arrow.y - b.y, 2));
+if(dist < b.radius + 10) {
+b.popped = true;
+arrow.launched = false;
+currentScore++;
+document.getElementById('score').innerText = currentScore;
+showToast(b.reason);
+if(currentScore === 5) {
+endGame();
+}
+}
+}
+});
+if(arrow.x > canvas.width || arrow.y < 0 || arrow.y > canvas.height) {
+arrow.launched = false;
+}
+ctx.save();
+ctx.translate(arrow.x, arrow.y);
+ctx.rotate(arrow.angle);
+ctx.beginPath();
+ctx.moveTo(-30, 0);
+ctx.lineTo(10, 0);
+ctx.strokeStyle = '#f8fafc';
+ctx.lineWidth = 3;
+ctx.stroke();
+ctx.beginPath();
+ctx.moveTo(10, 0);
+ctx.lineTo(2, -6);
+ctx.lineTo(2, 6);
+ctx.closePath();
+ctx.fillStyle = '#ff4a75';
+ctx.fill();
+ctx.restore();
+} else if(isDragging) {
+ctx.save();
+ctx.translate(bow.x, bow.y);
+let angle = Math.atan2(bow.y - mouse.y, bow.x - mouse.x);
+ctx.rotate(angle);
+let pullDist = Math.min(Math.sqrt(Math.pow(bow.x - mouse.x, 2) + Math.pow(bow.y - mouse.y, 2)), 60);
+ctx.beginPath();
+ctx.moveTo(-pullDist, 0);
+ctx.lineTo(-pullDist + 40, 0);
+ctx.strokeStyle = '#f8fafc';
+ctx.lineWidth = 3;
+ctx.stroke();
+ctx.beginPath();
+ctx.moveTo(-pullDist + 40, 0);
 ctx.lineTo(-pullDist + 32, 6);
 ctx.closePath();
 ctx.fillStyle = '#ff4a75';
