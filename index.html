@@ -246,4 +246,14 @@
             function getMousePos(e) {
                 let clientX = e.clientX || (e.touches && e.touches[0].clientX);
                 let clientY = e.clientY || (e.touches && e.touches[0].clientY);
+ctx.lineTo(-pullDist + 32, 6);
+ctx.closePath();
+ctx.fillStyle = '#ff4a75';
+ctx.fill();
+ctx.restore();
+}
+requestAnimationFrame(gameLoop);
+}
+gameLoop();
+}
 
